@@ -3,3 +3,5 @@ export const PERSON_ENDPOINT = `${API_BASE_URL}/person`;
 export const MOVIE_ENDPOINT = `${API_BASE_URL}/movie`;
 export const DIRECTOR_ENDPOINT = `${API_BASE_URL}/directors`;
 export const ACTOR_ENDPOINT = `${API_BASE_URL}/actors`;
+
+export const REVIEW_ENDPOINT = `${API_BASE_URL}/review`;

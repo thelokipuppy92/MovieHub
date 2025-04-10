@@ -209,3 +209,32 @@ button:focus-visible {
 .modal-buttons button:hover {
   background-color: var(--highlight-bg-color);
 }
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+  max-width: 400px;
+  padding: 1rem;
+  box-sizing: border-box;
+}
+
+form label {
+  text-align: left;
+  font-weight: 500;
+  margin-bottom: 0.2rem;
+}
+
+form input {
+  padding: 10px;
+  font-size: 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
+  background-color: var(--highlight-bg-color);
+  color: var(--primary-text-color);
+}
+
+form button {
+  margin-top: 0.5rem;
+}

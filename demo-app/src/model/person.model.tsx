@@ -3,6 +3,7 @@ interface Person {
     name: string;
     age: number;
     email: string;
+    password: string
 }
 
 export default Person;

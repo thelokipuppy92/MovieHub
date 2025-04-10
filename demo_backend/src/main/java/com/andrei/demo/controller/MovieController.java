@@ -21,6 +21,25 @@ public class MovieController {
     private final MovieService movieService;
     private final DirectorService directorService;
 
+    @GetMapping("/movie/available-genres")
+    public ResponseEntity<List<String>> getAvailableGenres() {
+        List<String> genres = movieService.getAvailableGenres();
+        return ResponseEntity.ok(genres);
+    }
+
+    @GetMapping("/movie/fil")
+    public ResponseEntity<List<MovieResponseDTO>> getMovies1(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String genre,
+            @RequestParam(required = false) String sortBy,
+            @RequestParam(required = false) String sortOrder) {
+
+        List<MovieResponseDTO> movies = movieService.getMovies1(search, genre, sortBy, sortOrder);
+
+        return ResponseEntity.ok(movies);
+    }
+
+
     @GetMapping("/movie/{movieId}")
     public MovieResponseDTO getMovieById(@PathVariable UUID movieId) {
         Movie movie = movieService.getMovie(movieId);
@@ -40,13 +59,6 @@ public class MovieController {
         return movieService.getMoviesByActor(actorId);
     }
 
-    /*
-    @PostMapping("/movie/{movieId}/actors")
-    public void assignActors(@PathVariable UUID movieId, @RequestBody List<UUID> actorIds) {
-        movieService.assignActorsToMovie(movieId, actorIds);
-    }
-
-     */
 
     @PostMapping("/movie/{movieId}/actors")
     public ResponseEntity<?> assignActors(@PathVariable UUID movieId, @RequestBody List<UUID> actorIds) {

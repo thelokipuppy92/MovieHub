@@ -1,18 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Movie from '../model/movie.model';
-import { MovieService } from '../service/MovieService';
 import DataTable, { TableColumn } from 'react-data-table-component';
 import ActorSelectionModal from './ActorSelectionModal';
 
 interface MovieTableProps {
+    data: Movie[];
     loading: boolean;
     isError: boolean;
     onRowSelected: (state: { selectedRows: Movie[] }) => void;
     theme: 'light' | 'dark';
 }
 
-function MovieTable({ loading, isError, onRowSelected, theme }: MovieTableProps) {
-    const [movies, setMovies] = useState<Movie[]>([]);
+function MovieTable({ data, loading, isError, onRowSelected, theme }: MovieTableProps) {
     const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
     const [showActorModal, setShowActorModal] = useState(false);
 
@@ -42,29 +41,7 @@ function MovieTable({ loading, isError, onRowSelected, theme }: MovieTableProps)
         }
     };
 
-    const fetchMovies = async () => {
-        try {
-            const movies = await MovieService.getMovies();
-            setMovies(movies);
-        } catch (error) {
-            console.error('Error fetching movies', error);
-        }
-    };
-
-    useEffect(() => {
-        fetchMovies();
-
-        const handleMovieListUpdated = () => {
-            fetchMovies();
-        };
-
-
-        window.addEventListener('movieListUpdated', handleMovieListUpdated);
-
-        return () => {
-            window.removeEventListener('movieListUpdated', handleMovieListUpdated);
-        };
-    }, []);
+    const userRole = localStorage.getItem('user_role');
 
     return (
         <>
@@ -77,18 +54,21 @@ function MovieTable({ loading, isError, onRowSelected, theme }: MovieTableProps)
                     <DataTable
                         title="Movies"
                         columns={columns}
-                        data={movies}
+                        data={data}
                         pagination
                         highlightOnHover
                         selectableRows
                         onSelectedRowsChange={handleRowSelected}
                         theme={theme === "dark" ? "dark" : "default"}
                     />
-                    <button onClick={handleAssignActors} className="assign-actors-btn">
-                        Assign Actors
-                    </button>
 
-                    {showActorModal && (
+                    {userRole === 'ADMIN' && (
+                        <button onClick={handleAssignActors} className="assign-actors-btn">
+                            Assign Actors
+                        </button>
+                    )}
+
+                    {showActorModal && selectedMovie && (
                         <ActorSelectionModal
                             isOpen={showActorModal}
                             onClose={() => setShowActorModal(false)}

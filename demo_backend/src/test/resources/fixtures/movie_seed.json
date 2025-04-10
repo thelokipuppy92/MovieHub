@@ -1,0 +1,19 @@
+[
+  {
+    "id": "1e5f0ffb-2dfa-4393-a280-2b0f8870faea",
+    "title": "Inception",
+    "releaseYear": 2010,
+    "genre": "Sci-Fi"
+  },
+  {
+    "id": "77e4f0fc-735b-4823-b5cc-e340b93c659a",
+    "title": "The Dark Knight",
+    "releaseYear": 2008,
+    "genre": "Action"},
+  {
+    "id": "f1e94c07-22b0-4743-94cd-4c9638f3bc7e",
+    "title": "Interstellar",
+    "releaseYear": 2014,
+    "genre": "Sci-Fi"
+  }
+]

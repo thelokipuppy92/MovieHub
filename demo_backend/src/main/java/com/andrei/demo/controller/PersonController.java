@@ -43,9 +43,12 @@ public class PersonController {
         return personService.updatePerson(uuid, person);
     }
 
+
     @DeleteMapping("/person/{uuid}")
     public void deletePerson(@PathVariable UUID uuid) {
         personService.deletePerson(uuid);
     }
+
+
 
 }

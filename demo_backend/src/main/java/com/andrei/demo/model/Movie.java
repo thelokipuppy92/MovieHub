@@ -3,6 +3,9 @@ package com.andrei.demo.model;
 import com.fasterxml.jackson.annotation.*;
 import jakarta.persistence.*;
 import lombok.Data;
+
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -24,8 +27,8 @@ public class Movie {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "director_id", nullable = false)
-    @JsonBackReference
     private Director director;
+
 
     @Override
     public String toString() {
@@ -38,15 +41,18 @@ public class Movie {
                 '}';
     }
 
-    // Many-to-Many: A movie can have multiple actors
     @ManyToMany
     @JoinTable(
             name = "movie_actor",
             joinColumns = @JoinColumn(name = "movie_id"),
             inverseJoinColumns = @JoinColumn(name = "actor_id")
     )
-    @JsonBackReference
     private Set<Actor> actors;
+
+
+    @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL)
+    private List<Review> reviews = new ArrayList<>();
+
 
 
 }

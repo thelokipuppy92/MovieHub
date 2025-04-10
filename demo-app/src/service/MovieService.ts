@@ -3,6 +3,34 @@ import { MOVIE_ENDPOINT } from '../constants/api';
 
 export class MovieService {
 
+    static async getMovies1({
+                                search = '',
+                                genre = '',
+                                sortBy = '',
+                                sortOrder = 'asc'
+                            }: {
+        search: string;
+        genre: string;
+        sortBy: string;
+        sortOrder: string;
+    }): Promise<Movie[]> {
+        let queryParams = '';
+
+        if (search) queryParams += `search=${encodeURIComponent(search)}&`;
+        if (genre) queryParams += `genre=${encodeURIComponent(genre)}&`;
+        if (sortBy) queryParams += `sortBy=${encodeURIComponent(sortBy)}&`;
+        if (sortOrder) queryParams += `sortOrder=${encodeURIComponent(sortOrder)}&`;
+
+        queryParams = queryParams.endsWith('&') ? queryParams.slice(0, -1) : queryParams;
+
+        const response = await fetch(`${MOVIE_ENDPOINT}/fil?${queryParams}`);
+        if (!response.ok) {
+            throw new Error('Failed to fetch movies');
+        }
+
+        return response.json();
+    }
+
     static async getMovies(): Promise<Movie[]> {
         const response = await fetch(MOVIE_ENDPOINT);
         if (!response.ok) {
@@ -97,4 +125,11 @@ export class MovieService {
 
 
 
+    static async getAvailableGenres(): Promise<string[]> {
+        const response = await fetch(`${MOVIE_ENDPOINT}/available-genres`);
+        if (!response.ok) {
+            throw new Error('Failed to fetch available genres');
+        }
+        return response.json();
+    }
 }

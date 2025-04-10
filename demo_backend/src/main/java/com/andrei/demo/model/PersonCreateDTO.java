@@ -3,6 +3,7 @@ package com.andrei.demo.model;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
@@ -10,6 +11,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Data
+@AllArgsConstructor
 public class PersonCreateDTO {
     @NotBlank(message = "Name is required")
     @Size(min = 2, max = 100, message = "Name should be between 2 and 100 characters")
@@ -20,4 +22,7 @@ public class PersonCreateDTO {
 
     @NotBlank(message = "Email is required")
     private String email;
+
+    @NotBlank(message = "Password is required")
+    private String password;
 }

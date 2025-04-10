@@ -28,9 +28,9 @@ public class Director {
 
     private String email = "";
 
-    @OneToMany(mappedBy = "director")
-    @JsonManagedReference
-    private List<Movie> movies;
+    //@OneToMany(mappedBy = "director")
+    //@JsonManagedReference
+   // private List<Movie> movies;
 
     @Override
     public String toString() {

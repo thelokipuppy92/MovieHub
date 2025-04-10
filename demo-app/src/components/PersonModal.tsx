@@ -73,6 +73,13 @@ function PersonModal({ isOpen, isUpdateMode, initialPerson, onClose, onAdd, onUp
                     value={person.email}
                     onChange={handleInputChange}
                 />
+                <input
+                    type="password"
+                    name="password"
+                    placeholder="Password"
+                    value={person.password}
+                    onChange={handleInputChange}
+                />
                 <div className="modal-buttons">
                     <button onClick={handleSubmit}>
                         {isUpdateMode ? 'Update' : 'Add'}

@@ -45,4 +45,20 @@ export class PersonService {
             throw new Error('Failed to delete person');
         }
     }
+
+
+    static async getPersonById(personId: string): Promise<Person | null> {
+        try {
+            const response = await fetch(`${PERSON_ENDPOINT}/${personId}`);
+            if (!response.ok) {
+                throw new Error('Failed to fetch user data');
+            }
+            const data = await response.json();
+            return data;  // Assuming the user object has a `name` field
+        } catch (error) {
+            console.error('Error fetching user:', error);
+            return null;
+        }
+    }
+
 }

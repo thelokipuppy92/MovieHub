@@ -1,0 +1,20 @@
+[
+  {
+    "id": null,
+    "rating": 10,
+    "comment": "very good",
+    "createdAt": "2025-04-07T12:00:00",
+    "email": "john.doe@example.com",
+    "movieId": "movie-uuid-1",
+    "personId": "person-uuid-1"
+  },
+  {
+    "id": null,
+    "rating": 8,
+    "comment": "password_jane",
+    "createdAt": "2025-04-07T12:30:00",
+    "email": "jane.doe@example.com",
+    "movieId": "movie-uuid-2",
+    "personId": "person-uuid-2"
+  }
+]

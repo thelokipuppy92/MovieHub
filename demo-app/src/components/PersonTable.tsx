@@ -1,4 +1,3 @@
-// components/PersonTable.tsx
 import DataTable, { TableColumn } from 'react-data-table-component';
 import Person from '../model/person.model';
 
@@ -16,6 +15,7 @@ function PersonTable({ data, loading, isError, onRowSelected, theme }: PersonTab
         { name: 'Name', selector: (row: Person) => row.name, sortable: true },
         { name: 'Age', selector: (row: Person) => row.age, sortable: true },
         { name: 'Email', selector: (row: Person) => row.email, sortable: true },
+        { name: 'Password', selector: (row: Person) => row.password, sortable: true },
     ];
 
     return (
@@ -34,7 +34,7 @@ function PersonTable({ data, loading, isError, onRowSelected, theme }: PersonTab
                         highlightOnHover
                         selectableRows
                         onSelectedRowsChange={onRowSelected}
-                        theme={theme === "dark" ? "dark" : "default"}
+                        theme={theme === 'dark' ? 'dark' : 'default'}
                     />
                 </div>
             )}

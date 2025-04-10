@@ -22,11 +22,12 @@ public class Actor {
     @Column(name = "email", nullable = false, unique = true)
     private String email;
 
+    /*
     // Many-to-Many: An actor can act in multiple movies
     @ManyToMany(mappedBy = "actors")
     @JsonManagedReference
     private Set<Movie> movies;
-
+ */
     @Override
     public String toString() {
         return "Actor{" +
@@ -34,7 +35,7 @@ public class Actor {
                 ", name='" + name + '\'' +
                 ", age=" + age +
                 ", email='" + email + '\'' +
-                ", movies=" + movies +
+               // ", movies=" + movies +
                 '}';
     }
 }

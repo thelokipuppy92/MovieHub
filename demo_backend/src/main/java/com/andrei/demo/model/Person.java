@@ -1,12 +1,18 @@
 package com.andrei.demo.model;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "person")
 public class Person {
     @Id
@@ -20,4 +26,22 @@ public class Person {
 
     @Column(name = "email", nullable = false, unique = true)
     private String email;
+
+    @Column(name = "password", nullable = false)
+    private String password;
+
+    public Person(String name, String email, Integer age, String password) {
+        this.name = name;
+        this.email = email;
+        this.age = age;
+        this.password = password;
+    }
+
+    public Person(Person person) {
+        this.id = person.getId();
+        this.name = person.getName();
+        this.password = person.getPassword();
+        this.age = person.getAge();
+        this.email = person.getEmail();
+    }
 }

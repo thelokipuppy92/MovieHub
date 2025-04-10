@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import com.andrei.demo.repository.DirectorRepository;
 import org.springframework.web.server.ResponseStatusException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Data
 @Service
@@ -131,5 +132,52 @@ public class MovieService {
                     .orElseThrow(() -> new IllegalStateException("Movie with ID " + movieId + " not found"));
 
 
-            movieRepository.delete(movie);}
+            movieRepository.delete(movie);
+    }
+
+    public List<String> getAvailableGenres() {
+        return movieRepository.findAll().stream()
+                .map(Movie::getGenre)
+                .distinct()
+                .collect(Collectors.toList());
+    }
+
+    public List<MovieResponseDTO> getMovies1(String search, String genre, String sortBy, String sortOrder) {
+        List<Movie> movies = movieRepository.findAll();
+
+        if (genre != null && !genre.isEmpty()) {
+            movies = movies.stream()
+                    .filter(movie -> movie.getGenre().equalsIgnoreCase(genre))
+                    .collect(Collectors.toList());
+        }
+
+        if (search != null && !search.isEmpty()) {
+            movies = movies.stream()
+                    .filter(movie -> movie.getTitle().toLowerCase().contains(search.toLowerCase()))
+                    .collect(Collectors.toList());
+        }
+
+        if (sortBy != null && !sortBy.isEmpty()) {
+            if ("title".equalsIgnoreCase(sortBy)) {
+                if ("asc".equalsIgnoreCase(sortOrder)) {
+                    movies.sort(Comparator.comparing(Movie::getTitle));
+                } else {
+                    movies.sort(Comparator.comparing(Movie::getTitle).reversed());
+                }
+            } else if ("releaseYear".equalsIgnoreCase(sortBy)) {
+                if ("asc".equalsIgnoreCase(sortOrder)) {
+                    movies.sort(Comparator.comparing(Movie::getReleaseYear));
+                } else {
+                    movies.sort(Comparator.comparing(Movie::getReleaseYear).reversed());
+                }
+            }
+        }
+
+        return movies.stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+
+
 }
