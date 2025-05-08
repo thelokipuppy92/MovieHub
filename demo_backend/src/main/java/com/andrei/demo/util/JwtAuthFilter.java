@@ -38,7 +38,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 .getPayload();
     }
 
-    private boolean checkClaims(String token){
+
+    private boolean checkClaims(String token) {
         Claims claims = getAllClaimsFromToken(token);
 
         // check issuer
@@ -58,31 +59,33 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             log.error("Token issued at date is invalid");
             return false;
         }
+
         // check claims
         if (claims.get("userId") == null || claims.get("role") == null) {
             log.error("Token claims are invalid: does not contain userId and role");
             return false;
         }
-        log.info("Token is valid. User ID: {}, Role: {}",
-                claims.get("userId"), claims.get("role"));
+
+        log.info("Token is valid. User ID: {}, Role: {}", claims.get("userId"), claims.get("role"));
         return true;
     }
-
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
 
-        String path = request.getRequestURI();
-        String method = request.getMethod();
+        String path = request.getRequestURI();  // Get the full URI
+        String method = request.getMethod();  // Get the HTTP method
 
-        // Allow OPTIONS requests (for CORS preflight) and /login endpoint
+        log.info("Request Path: {}, Method: {}", path, method);
+
+        // Allow OPTIONS requests (for CORS preflight) and specific public endpoints
         if ("/login".equals(path) || "/register".equals(path) || "/forgot-password".equals(path) ||
                 path.startsWith("/forgotPassword/verifyMail") ||
                 path.startsWith("/forgotPassword/verifyOtp") ||
-                path.startsWith("/forgotPassword/changePassword")
-                || "OPTIONS".equalsIgnoreCase(method)) {
+                path.startsWith("/forgotPassword/changePassword") ||
+                "OPTIONS".equalsIgnoreCase(method)) {
             log.info("Skipping JWT filter for path: {} and method: {}", path, method);
             filterChain.doFilter(request, response);
             return;
@@ -96,18 +99,55 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             return;
         }
 
-        String token = authHeader.substring(7);
+        String token = authHeader.substring(7);  // Remove "Bearer " prefix
 
         try {
-            boolean isValid = checkClaims(token);
-            if (!isValid) {
+            Claims claims = getAllClaimsFromToken(token);
+            if (!checkClaims(token)) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 return;
             }
+
+            String role = (String) claims.get("role");
+
+            if ("user".equalsIgnoreCase(role)) {
+                boolean isAllowedPath = false;
+
+                // Allow specific GET methods for 'user' role
+                if (method.equalsIgnoreCase("GET")) {
+                    isAllowedPath = path.equals("/movie") ||
+                            path.equals("/movie/available-genres") ||
+                            path.equals("/movie/fil") ||
+                            path.startsWith("/movie/") ||
+                            path.equals("/actors") ||
+                            path.startsWith("/actors/email/") ||
+                            path.equals("/directors") ||
+                            path.startsWith("/directors/email/") ||
+                            path.startsWith("/directors/name/") ||
+                            path.matches("/review/[a-fA-F0-9\\-]+");
+                }
+
+
+                if ("POST".equalsIgnoreCase(method)) {
+                    isAllowedPath = path.startsWith("/review");
+                }
+
+
+                if ("PUT".equalsIgnoreCase(method) || "DELETE".equalsIgnoreCase(method)) {
+                    isAllowedPath = path.matches("/review/[a-fA-F0-9\\-]+");
+                }
+
+                if (!isAllowedPath) {
+                    log.warn("Access denied for user role to path: {} and method: {}", path, method);
+                    response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                    return;
+                }
+            }
+
+
             filterChain.doFilter(request, response);
 
         } catch (JwtException e) {
-            // Token is invalid, log the error and set the response status
             log.error("Invalid JWT token: {}", e.getMessage());
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         }
