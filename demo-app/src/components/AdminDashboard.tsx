@@ -8,6 +8,7 @@ import { PersonService } from "../service/PersonService.ts";
 import PersonModal from "./PersonModal.tsx";
 import usePersonActions from "../hooks/usePersonActions.ts";
 import usePersonModal from "../hooks/usePersonModal.ts";
+import  '../config/axiosConfig.ts';
 
 // Import statements for Movie section
 import Movie from "../model/movie.model";
@@ -75,6 +76,7 @@ function AdminDashboard() {
             setIsError(true);
         }
     };
+
 
     const handleRowSelected = (state: { selectedRows: Person[] }) => {
         setSelectedPerson(state.selectedRows[0] || null);
@@ -226,7 +228,8 @@ function AdminDashboard() {
     };
 
     const handleLogout = () => {
-        localStorage.removeItem("admin_token");
+        //localStorage.removeItem("admin_token");
+        sessionStorage.removeItem("token");
         navigate('/login');
     };
 

@@ -1,64 +1,33 @@
+import axios from 'axios';
 import Person from '../model/person.model';
 import { PERSON_ENDPOINT } from '../constants/api';
 
 export class PersonService {
     static async getPersons(): Promise<Person[]> {
-        const response = await fetch(PERSON_ENDPOINT);
-        if (!response.ok) {
-            throw new Error('Failed to fetch persons');
-        }
-        return response.json();
+        const response = await axios.get(PERSON_ENDPOINT);
+        return response.data;
     }
 
     static async addPerson(person: Omit<Person, 'id'>): Promise<Person> {
-        const response = await fetch(PERSON_ENDPOINT, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(person),
-        });
-        if (!response.ok) {
-            throw new Error('Failed to add person');
-        }
-        return response.json();
+        const response = await axios.post(PERSON_ENDPOINT, person);
+        return response.data;
     }
 
     static async updatePerson(person: Person): Promise<void> {
-        const response = await fetch(`${PERSON_ENDPOINT}/${person.id}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(person),
-        });
-        if (!response.ok) {
-            throw new Error('Failed to update person');
-        }
+        await axios.put(`${PERSON_ENDPOINT}/${person.id}`, person);
     }
 
     static async deletePerson(id: string): Promise<void> {
-        const response = await fetch(`${PERSON_ENDPOINT}/${id}`, {
-            method: 'DELETE',
-        });
-        if (!response.ok) {
-            throw new Error('Failed to delete person');
-        }
+        await axios.delete(`${PERSON_ENDPOINT}/${id}`);
     }
-
 
     static async getPersonById(personId: string): Promise<Person | null> {
         try {
-            const response = await fetch(`${PERSON_ENDPOINT}/${personId}`);
-            if (!response.ok) {
-                throw new Error('Failed to fetch user data');
-            }
-            const data = await response.json();
-            return data;  // Assuming the user object has a `name` field
+            const response = await axios.get(`${PERSON_ENDPOINT}/${personId}`);
+            return response.data;
         } catch (error) {
             console.error('Error fetching user:', error);
             return null;
         }
     }
-
 }

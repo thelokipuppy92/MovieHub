@@ -154,8 +154,8 @@ public class PersonControllerIntegrationTests {
         String personJson = loadFixture("person_to_delete.json");
         Person personToDelete = objectMapper.readValue(personJson, Person.class);
 
-        personRepository.saveAndFlush(personToDelete);
-        UUID personId = personToDelete.getId();
+        Person person = personRepository.saveAndFlush(personToDelete);
+        UUID personId = person.getId();
 
         mockMvc.perform(delete("/person/" + personId.toString()))
                 .andExpect(status().isOk());

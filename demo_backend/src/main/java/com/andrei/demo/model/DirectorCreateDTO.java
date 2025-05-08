@@ -1,11 +1,10 @@
 package com.andrei.demo.model;
 
 import jakarta.validation.constraints.*;
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.UUID;
+
 
 @Getter
 @Setter

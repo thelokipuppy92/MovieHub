@@ -20,6 +20,8 @@ import {ReviewService} from "../service/ReviewService.ts";
 import Review from "../model/review.model.tsx";
 import {toast, ToastContainer} from "react-toastify";
 import {PersonService} from "../service/PersonService.ts";
+import  '../config/axiosConfig.ts';
+
 
 const Dashboard = () => {
     const navigate = useNavigate();
@@ -126,7 +128,7 @@ const Dashboard = () => {
     const handleReviewButtonClick = async () => {
         setIsReviewModalOpen(false);
         if (selectedMovie) {
-            const personId = localStorage.getItem('personId');
+            const personId = sessionStorage.getItem('personId');
             if (!personId) {
                 alert('Please log in to write a review.');
                 return;
@@ -172,7 +174,7 @@ const Dashboard = () => {
         }
 
         //retrieve the logged-in person's ID
-        const personId = localStorage.getItem('personId');
+        const personId = sessionStorage.getItem('personId');
         if (!personId) {
             alert('User not logged in. Please log in to submit a review.');
             return;
@@ -344,9 +346,9 @@ const Dashboard = () => {
     };
 
     const handleLogout = () => {
-        localStorage.removeItem('personId');
-        localStorage.removeItem('admin_token');
-        localStorage.removeItem('user_role');
+        sessionStorage.removeItem('personId');
+        sessionStorage.removeItem('token');
+        sessionStorage.removeItem('user_role');
 
         toast.info('Logged out successfully!');
         navigate('/login');

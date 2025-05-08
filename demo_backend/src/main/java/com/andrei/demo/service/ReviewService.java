@@ -4,94 +4,89 @@ import com.andrei.demo.model.*;
 import com.andrei.demo.repository.MovieRepository;
 import com.andrei.demo.repository.PersonRepository;
 import com.andrei.demo.repository.ReviewRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class ReviewService {
 
-    @Autowired
-    private ReviewRepository reviewRepo;
+    private final ReviewRepository reviewRepo;
+    private final MovieRepository movieRepo;
+    private final PersonRepository personRepo;
 
-    @Autowired
-    private MovieRepository movieRepo;
+    private final Function<Review, ReviewResponseDTO> toDto = review -> ReviewResponseDTO.builder()
+            .id(review.getId())
+            .personId(review.getPerson().getId())
+            .movieId(review.getMovie().getId())
+            .rating(review.getRating())
+            .comment(review.getComment())
+            .build();
 
-    @Autowired
-    private PersonRepository personRepo;
-
-    public ReviewResponseDTO mapToResponseDTO(Review review) {
-        ReviewResponseDTO dto = new ReviewResponseDTO();
-        dto.setId(review.getId());
-        dto.setPersonId(review.getPerson().getId());
-        dto.setMovieId(review.getMovie().getId());
-        dto.setRating(review.getRating());
-        dto.setComment(review.getComment());
-        return dto;
-    }
-
-    public Review addReview(ReviewCreateDTO reviewCreateDTO) {
-        Movie movie = movieRepo.findById(reviewCreateDTO.getMovieId())
+    public Review addReview(ReviewCreateDTO dto) {
+        Movie movie = movieRepo.findById(dto.getMovieId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Movie not found"));
 
-        Person person = personRepo.findById(reviewCreateDTO.getPersonId())
+        Person person = personRepo.findById(dto.getPersonId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
-        reviewRepo.findByPersonAndMovie(person, movie).ifPresent(existing -> {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You already reviewed this movie.");
-        });
+        reviewRepo.findByPersonAndMovie(person, movie)
+                .ifPresent(existing -> {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You already reviewed this movie.");
+                });
 
-        if (reviewCreateDTO.getRating() < 1 || reviewCreateDTO.getRating() > 10) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Rating must be between 1 and 10.");
-        }
+        validateRating(dto.getRating());
 
-        Review review = new Review(person, movie, reviewCreateDTO.getRating(), reviewCreateDTO.getComment());
-
-        return reviewRepo.save(review);
+        return reviewRepo.save(new Review(person, movie, dto.getRating(), dto.getComment()));
     }
 
     public List<ReviewResponseDTO> getReviewsByMovie(UUID movieId) {
-        Movie movie = movieRepo.findById(movieId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Movie not found"));
-
-        List<Review> reviews = reviewRepo.findByMovie(movie);
-        return reviews.stream().map(this::mapToResponseDTO).collect(Collectors.toList());
+        return movieRepo.findById(movieId)
+                .map(reviewRepo::findByMovie)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Movie not found"))
+                .stream()
+                .map(toDto)
+                .collect(Collectors.toList());
     }
 
     public List<ReviewResponseDTO> getReviewsByUser(UUID personId) {
-        Person person = personRepo.findById(personId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
-
-        List<Review> reviews = reviewRepo.findByPerson(person);
-        return reviews.stream().map(this::mapToResponseDTO).collect(Collectors.toList());
+        return personRepo.findById(personId)
+                .map(reviewRepo::findByPerson)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"))
+                .stream()
+                .map(toDto)
+                .collect(Collectors.toList());
     }
 
-    public Review updateReview(UUID reviewId, ReviewCreateDTO reviewCreateDTO) {
-        Review review = reviewRepo.findById(reviewId)
+    public Review updateReview(UUID reviewId, ReviewCreateDTO dto) {
+        validateRating(dto.getRating());
+
+        return reviewRepo.findById(reviewId)
+                .map(existing -> {
+                    existing.setRating(dto.getRating());
+                    existing.setComment(dto.getComment());
+                    return reviewRepo.save(existing);
+                })
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Review not found"));
-
-        if (reviewCreateDTO.getRating() < 1 || reviewCreateDTO.getRating() > 10) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Rating must be between 1 and 10.");
-        }
-
-        review.setRating(reviewCreateDTO.getRating());
-        review.setComment(reviewCreateDTO.getComment());
-
-        return reviewRepo.save(review);
     }
-
 
     public void deleteReview(UUID reviewId) {
-        Review review = reviewRepo.findById(reviewId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Review not found"));
-
-        reviewRepo.delete(review);
+        reviewRepo.findById(reviewId)
+                .ifPresentOrElse(reviewRepo::delete, () -> {
+                    throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Review not found");
+                });
     }
 
-
+    private void validateRating(int rating) {
+        if (rating < 1 || rating > 10) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Rating must be between 1 and 10.");
+        }
+    }
 }

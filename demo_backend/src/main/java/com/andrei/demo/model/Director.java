@@ -8,9 +8,11 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import java.util.UUID;
 import java.util.List;
+
 
 @Entity
 @Data
@@ -41,6 +43,7 @@ public class Director {
                 ", email='" + email + '\'' +
                 '}';
     }
+
 
 
 }

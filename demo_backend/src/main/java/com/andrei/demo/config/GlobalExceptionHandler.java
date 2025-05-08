@@ -16,7 +16,7 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class); // 🔥 Manually added Logger
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -28,8 +28,17 @@ public class GlobalExceptionHandler {
             errorMap.put(error.getField(), error.getDefaultMessage());
         }
 
-        log.error("Validation error: {}", errorMap); // ✅ Now this will 1000% work
+        log.error("Validation error: {}", errorMap);
 
         return errorMap;
+    }
+
+    @ExceptionHandler(EmailNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public Map<String, String> handleEmailNotFoundException(EmailNotFoundException ex) {
+        log.error("Email not found: {}", ex.getMessage());
+        Map<String, String> errorResponse = new HashMap<>();
+        errorResponse.put("error", ex.getMessage());
+        return errorResponse;
     }
 }

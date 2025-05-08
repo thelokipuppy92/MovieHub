@@ -44,4 +44,19 @@ public class Person {
         this.age = person.getAge();
         this.email = person.getEmail();
     }
+
+    /*
+    @OneToOne(mappedBy = "person")
+    private  ForgotPassword forgotPassword;
+
+     */
+
+    public String getRole() {
+        if (this.email.equals("admin@example.com")) {
+            return "ADMIN";
+        } else {
+            return "USER";
+        }
+    }
+
 }

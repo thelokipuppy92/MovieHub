@@ -1,135 +1,58 @@
+import axios from 'axios';
 import Movie from '../model/movie.model';
 import { MOVIE_ENDPOINT } from '../constants/api';
 
 export class MovieService {
-
-    static async getMovies1({
-                                search = '',
-                                genre = '',
-                                sortBy = '',
-                                sortOrder = 'asc'
-                            }: {
+    static async getMovies1({ search = '', genre = '', sortBy = '', sortOrder = 'asc' }: {
         search: string;
         genre: string;
         sortBy: string;
         sortOrder: string;
     }): Promise<Movie[]> {
-        let queryParams = '';
-
-        if (search) queryParams += `search=${encodeURIComponent(search)}&`;
-        if (genre) queryParams += `genre=${encodeURIComponent(genre)}&`;
-        if (sortBy) queryParams += `sortBy=${encodeURIComponent(sortBy)}&`;
-        if (sortOrder) queryParams += `sortOrder=${encodeURIComponent(sortOrder)}&`;
-
-        queryParams = queryParams.endsWith('&') ? queryParams.slice(0, -1) : queryParams;
-
-        const response = await fetch(`${MOVIE_ENDPOINT}/fil?${queryParams}`);
-        if (!response.ok) {
-            throw new Error('Failed to fetch movies');
-        }
-
-        return response.json();
+        const params = { search, genre, sortBy, sortOrder };
+        const response = await axios.get(`${MOVIE_ENDPOINT}/fil`, { params });
+        return response.data;
     }
 
     static async getMovies(): Promise<Movie[]> {
-        const response = await fetch(MOVIE_ENDPOINT);
-        if (!response.ok) {
-            throw new Error('Failed to fetch movies');
-        }
-        return response.json();
+        const response = await axios.get(MOVIE_ENDPOINT);
+        return response.data;
     }
 
     static async addMovie(movie: { title: string; releaseYear: number; genre: string; directorId: string }): Promise<Movie> {
-        const response = await fetch(`${MOVIE_ENDPOINT}/add`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(movie),
-        });
-
-        if (!response.ok) {
-            throw new Error('Failed to add movie');
-        }
-
-        return response.json();
+        const response = await axios.post(`${MOVIE_ENDPOINT}/add`, movie);
+        return response.data;
     }
 
     static async updateMovie(id: string, movie: { title: string; releaseYear: number; genre: string; directorId: string }): Promise<void> {
-        const response = await fetch(`${MOVIE_ENDPOINT}/${id}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(movie),
-        });
-
-        if (!response.ok) {
-            throw new Error('Failed to update movie');
-        }
+        await axios.put(`${MOVIE_ENDPOINT}/${id}`, movie);
     }
 
     static async deleteMovie(id: string): Promise<void> {
-        const response = await fetch(`${MOVIE_ENDPOINT}/${id}`, {
-            method: 'DELETE',
-        });
-        if (!response.ok) {
-            throw new Error('Failed to delete movie');
-        }
+        await axios.delete(`${MOVIE_ENDPOINT}/${id}`);
     }
 
     static async getMoviesByGenre(genre: string): Promise<Movie[]> {
-        const response = await fetch(`${MOVIE_ENDPOINT}/genre/${genre}`);
-        if (!response.ok) {
-            throw new Error('Failed to fetch movies by genre');
-        }
-        return response.json();
+        const response = await axios.get(`${MOVIE_ENDPOINT}/genre/${genre}`);
+        return response.data;
     }
 
     static async getMoviesByDirector(directorId: string): Promise<Movie[]> {
-        const response = await fetch(`${MOVIE_ENDPOINT}/director/${directorId}`);
-        if (!response.ok) {
-            throw new Error('Failed to fetch movies by director');
-        }
-        return response.json();
+        const response = await axios.get(`${MOVIE_ENDPOINT}/director/${directorId}`);
+        return response.data;
     }
 
     static async getMoviesByActorId(actorId: string): Promise<Movie[]> {
-        try {
-            const response = await fetch(`${MOVIE_ENDPOINT}/actor/${actorId}`);
-            if (!response.ok) {
-                throw new Error('Failed to fetch movies by actor ID');
-            }
-            return response.json();
-        } catch (error) {
-            console.error('Error fetching movies by actor ID:', error);
-            throw error;
-        }
+        const response = await axios.get(`${MOVIE_ENDPOINT}/actor/${actorId}`);
+        return response.data;
     }
 
     static async assignActorsToMovie(movieId: string, actorIds: string[]): Promise<void> {
-        const response = await fetch(`${MOVIE_ENDPOINT}/${movieId}/actors`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(actorIds),
-        });
-
-        if (!response.ok) {
-            throw new Error('Failed to assign actors to movie');
-        }
-        const text = await response.text();
-        return text ? JSON.parse(text) : null;
+        await axios.post(`${MOVIE_ENDPOINT}/${movieId}/actors`, actorIds);
     }
 
-
-
     static async getAvailableGenres(): Promise<string[]> {
-        const response = await fetch(`${MOVIE_ENDPOINT}/available-genres`);
-        if (!response.ok) {
-            throw new Error('Failed to fetch available genres');
-        }
-        return response.json();
+        const response = await axios.get(`${MOVIE_ENDPOINT}/available-genres`);
+        return response.data;
     }
 }

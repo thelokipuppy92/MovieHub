@@ -2,89 +2,93 @@ package com.andrei.demo.service;
 
 import com.andrei.demo.model.*;
 import com.andrei.demo.repository.ActorRepository;
+import com.andrei.demo.repository.DirectorRepository;
 import com.andrei.demo.repository.MovieRepository;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import com.andrei.demo.repository.DirectorRepository;
 import org.springframework.web.server.ResponseStatusException;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
-@Data
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class MovieService {
+
     private final MovieRepository movieRepository;
-
     private final DirectorRepository directorRepository;
-
-    private final DirectorService directorService;
-
-    @Autowired
-    private ActorRepository actorRepository;
+    private final ActorRepository actorRepository;
 
     public MovieResponseDTO mapToResponseDTO(Movie movie) {
-        MovieResponseDTO dto = new MovieResponseDTO();
-        dto.setId(movie.getId());
-        dto.setTitle(movie.getTitle());
-        dto.setReleaseYear(movie.getReleaseYear());
-        dto.setGenre(movie.getGenre());
-        dto.setDirectorName(movie.getDirector().getName());
-        dto.setDirectorId(movie.getDirector().getId().toString());
-        return dto;
+        return new MovieResponseDTO(
+                movie.getId(),
+                movie.getTitle(),
+                movie.getReleaseYear(),
+                movie.getGenre(),
+                movie.getDirector().getName(),
+                movie.getDirector().getId().toString()
+        );
     }
 
     public Movie addMovie(MovieCreateDTO movieCreateDTO) {
-        if (movieCreateDTO == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, " Movie data cannot be null");
-        }
+        return Optional.ofNullable(movieCreateDTO)
+                .map(dto -> {
+                    UUID directorId;
+                    try {
+                        directorId = UUID.fromString(dto.getDirectorId());
+                    } catch (IllegalArgumentException e) {
+                        System.err.println("Invalid UUID format: " + e.getMessage());
+                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid directorId format");
+                    }
 
+                    Director director = directorRepository.findById(directorId)
+                            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Director not found"));
+
+                    Movie movie = new Movie();
+                    movie.setTitle(dto.getTitle());
+                    movie.setReleaseYear(dto.getReleaseYear());
+                    movie.setGenre(dto.getGenre());
+                    movie.setDirector(director);
+
+                    try {
+                        return movieRepository.save(movie);
+                    } catch (Exception e) {
+                        System.err.println("Error adding movie: " + e.getMessage());
+                        throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error adding movie");
+                    }
+                })
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Movie data cannot be null"));
+    }
+
+    private Optional<Director> findDirectorById(String directorId) {
         try {
-            UUID directorId = UUID.fromString(movieCreateDTO.getDirectorId());
-
-            Director director = directorRepository.findById(directorId)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Director not found"));
-
-            Movie movie = new Movie();
-            movie.setTitle(movieCreateDTO.getTitle());
-            movie.setReleaseYear(movieCreateDTO.getReleaseYear());
-            movie.setGenre(movieCreateDTO.getGenre());
-            movie.setDirector(director);
-
-            return movieRepository.save(movie);
+            return Optional.of(UUID.fromString(directorId))
+                    .flatMap(directorRepository::findById);
         } catch (IllegalArgumentException e) {
-            System.err.println("Invalid UUID format: " + e.getMessage());
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid directorId format");
-        } catch (Exception e) {
-            System.err.println("Error adding movie: " + e.getMessage());
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error adding movie");
         }
     }
 
     public Movie updateMovie(UUID movieId, MovieUpdateDTO dto) {
-        Movie movie = movieRepository.findById(movieId)
-                .orElseThrow(() -> new RuntimeException("Movie not found"));
+        return movieRepository.findById(movieId)
+                .map(existingMovie -> updateExistingMovie(existingMovie, dto))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Movie not found"));
+    }
 
-        if (dto.getDirectorId() == null || dto.getDirectorId().isEmpty()) {
-            throw new IllegalArgumentException("Director ID cannot be null or empty");
-        }
-        UUID directorUuid = UUID.fromString(dto.getDirectorId());
+    private Movie updateExistingMovie(Movie movie, MovieUpdateDTO dto) {
+        return Optional.ofNullable(dto.getDirectorId())
+                .map(directorId -> findDirectorById(directorId)
+                        .map(director -> applyMovieUpdate(movie, dto, director))
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Director not found")))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Director ID cannot be null"));
+    }
 
-        Director director = directorRepository.findById(directorUuid)
-                .orElseThrow(() -> new RuntimeException("Director not found"));
-
-        if (director.getName() == null || director.getName().isEmpty()) {
-            throw new RuntimeException("Director's name cannot be null or empty");
-        }
-
+    private Movie applyMovieUpdate(Movie movie, MovieUpdateDTO dto, Director director) {
         movie.setTitle(dto.getTitle());
         movie.setReleaseYear(dto.getReleaseYear());
         movie.setGenre(dto.getGenre());
         movie.setDirector(director);
-
         return movieRepository.save(movie);
     }
 
@@ -93,46 +97,46 @@ public class MovieService {
     }
 
     public void assignActorsToMovie(UUID movieId, List<UUID> actorIds) {
-        try {
-            Movie movie = movieRepository.findById(movieId)
-                    .orElseThrow(() -> new RuntimeException("Movie not found"));
+        movieRepository.findById(movieId)
+                .ifPresentOrElse(
+                        movie -> updateMovieActors(movie, actorIds),
+                        () -> {
+                            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Movie not found");
+                        }
+                );
+    }
 
-            List<UUID> actorIdsCopy = new ArrayList<>(actorIds);
-
-            List<Actor> actors = actorRepository.findAllById(actorIdsCopy);
-
-            Set<Actor> updatedActors = new HashSet<>(movie.getActors());
-
-            updatedActors.addAll(actors);
-
-            movie.setActors(updatedActors);
-
-            movieRepository.save(movie);
-        } catch (RuntimeException ex) {
-            System.out.println("EXCEPTION: " + ex.getMessage());
-        }
+    private void updateMovieActors(Movie movie, List<UUID> actorIds) {
+        List<Actor> actors = actorRepository.findAllById(new HashSet<>(actorIds));
+        movie.getActors().addAll(actors);
+        movieRepository.save(movie);
     }
 
     public List<Movie> getAllMovies() {
         return movieRepository.findAll();
     }
 
+    public List<Movie> getMoviesByGenre(String genre) {
+        return movieRepository.findByGenre(genre);
+    }
 
-    public List<Movie> getMoviesByGenre (String genre){
-            return movieRepository.findByGenre(genre);}
+    public List<Movie> getMoviesByDirector(UUID directorId) {
+        return movieRepository.findByDirectorId(directorId);
+    }
 
-    public List<Movie> getMoviesByDirector (UUID directorId){
-            return movieRepository.findByDirectorId(directorId);}
-    public Movie getMovie (UUID movieId){
-            return movieRepository.findById(movieId)
-                    .orElseThrow(() -> new IllegalStateException("Movie with ID " + movieId + " not found"));}
+    public Movie getMovie(UUID movieId) {
+        return movieRepository.findById(movieId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Movie with ID " + movieId + " not found"));
+    }
 
-    public void deleteMovie (UUID movieId){
-            Movie movie = movieRepository.findById(movieId)
-                    .orElseThrow(() -> new IllegalStateException("Movie with ID " + movieId + " not found"));
-
-
-            movieRepository.delete(movie);
+    public void deleteMovie(UUID movieId) {
+        movieRepository.findById(movieId)
+                .ifPresentOrElse(
+                        movie -> movieRepository.delete(movie),
+                        () -> {
+                            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Movie with ID " + movieId + " not found");
+                        }
+                );
     }
 
     public List<String> getAvailableGenres() {
@@ -143,41 +147,28 @@ public class MovieService {
     }
 
     public List<MovieResponseDTO> getMovies1(String search, String genre, String sortBy, String sortOrder) {
-        List<Movie> movies = movieRepository.findAll();
+        return movieRepository.findAll().stream()
+                .filter(movie -> genre == null || genre.isEmpty() || movie.getGenre().equalsIgnoreCase(genre))
+                .filter(movie -> search == null || search.isEmpty() || movie.getTitle().toLowerCase().contains(search.toLowerCase()))
+                .sorted((m1, m2) -> {
+                    if (sortBy == null || sortBy.isEmpty()) return 0;
 
-        if (genre != null && !genre.isEmpty()) {
-            movies = movies.stream()
-                    .filter(movie -> movie.getGenre().equalsIgnoreCase(genre))
-                    .collect(Collectors.toList());
-        }
+                    Comparator<Movie> comparator;
+                    if ("title".equalsIgnoreCase(sortBy)) {
+                        comparator = Comparator.comparing(Movie::getTitle);
+                    } else if ("releaseYear".equalsIgnoreCase(sortBy)) {
+                        comparator = Comparator.comparing(Movie::getReleaseYear);
+                    } else {
+                        return 0;
+                    }
 
-        if (search != null && !search.isEmpty()) {
-            movies = movies.stream()
-                    .filter(movie -> movie.getTitle().toLowerCase().contains(search.toLowerCase()))
-                    .collect(Collectors.toList());
-        }
+                    if ("desc".equalsIgnoreCase(sortOrder)) {
+                        comparator = comparator.reversed();
+                    }
 
-        if (sortBy != null && !sortBy.isEmpty()) {
-            if ("title".equalsIgnoreCase(sortBy)) {
-                if ("asc".equalsIgnoreCase(sortOrder)) {
-                    movies.sort(Comparator.comparing(Movie::getTitle));
-                } else {
-                    movies.sort(Comparator.comparing(Movie::getTitle).reversed());
-                }
-            } else if ("releaseYear".equalsIgnoreCase(sortBy)) {
-                if ("asc".equalsIgnoreCase(sortOrder)) {
-                    movies.sort(Comparator.comparing(Movie::getReleaseYear));
-                } else {
-                    movies.sort(Comparator.comparing(Movie::getReleaseYear).reversed());
-                }
-            }
-        }
-
-        return movies.stream()
+                    return comparator.compare(m1, m2);
+                })
                 .map(this::mapToResponseDTO)
                 .collect(Collectors.toList());
     }
-
-
-
 }
