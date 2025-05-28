@@ -4,6 +4,7 @@ import com.andrei.demo.model.*;
 import com.andrei.demo.repository.ActorRepository;
 import com.andrei.demo.repository.DirectorRepository;
 import com.andrei.demo.repository.MovieRepository;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,13 @@ public class MovieService {
     private final MovieRepository movieRepository;
     private final DirectorRepository directorRepository;
     private final ActorRepository actorRepository;
+    private final MoviePublisher moviePublisher;
+    private final UserNotificationService userNotificationService;
+
+    @PostConstruct
+    public void init() {
+        moviePublisher.addObserver(userNotificationService);
+    }
 
     public MovieResponseDTO mapToResponseDTO(Movie movie) {
         return new MovieResponseDTO(
@@ -27,7 +35,11 @@ public class MovieService {
                 movie.getReleaseYear(),
                 movie.getGenre(),
                 movie.getDirector().getName(),
-                movie.getDirector().getId().toString()
+                movie.getDirector().getId().toString(),
+                movie.getImageUrl(),
+                movie.getDescription(),
+                movie.getReleased()
+
         );
     }
 
@@ -50,6 +62,9 @@ public class MovieService {
                     movie.setReleaseYear(dto.getReleaseYear());
                     movie.setGenre(dto.getGenre());
                     movie.setDirector(director);
+                    movie.setImageUrl(dto.getImageUrl());
+                    movie.setDescription(dto.getDescription());
+                    movie.setReleased(dto.getReleased());
 
                     try {
                         return movieRepository.save(movie);
@@ -84,12 +99,40 @@ public class MovieService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Director ID cannot be null"));
     }
 
+    /*
     private Movie applyMovieUpdate(Movie movie, MovieUpdateDTO dto, Director director) {
         movie.setTitle(dto.getTitle());
         movie.setReleaseYear(dto.getReleaseYear());
         movie.setGenre(dto.getGenre());
         movie.setDirector(director);
+        movie.setDescription(dto.getDescription());
+        movie.setReleased(dto.getReleased());
         return movieRepository.save(movie);
+    }
+
+     */
+    private Movie applyMovieUpdate(Movie movie, MovieUpdateDTO dto, Director director) {
+        // Save old released status before update
+        Boolean oldReleased = movie.getReleased() != null ? movie.getReleased() : false;
+
+        movie.setTitle(dto.getTitle());
+        movie.setReleaseYear(dto.getReleaseYear());
+        movie.setGenre(dto.getGenre());
+        movie.setDirector(director);
+        movie.setDescription(dto.getDescription());
+        movie.setReleased(dto.getReleased());
+
+        Movie savedMovie = movieRepository.save(movie);
+
+        Boolean newReleased = savedMovie.getReleased() != null ? savedMovie.getReleased() : false;
+
+        // Notify observers only if released changed from false to true
+        if (!oldReleased && newReleased) {
+            moviePublisher.notifyObservers(savedMovie);
+            System.out.println("[DEBUG] MoviePublisher notified observers for movie: " + savedMovie.getTitle());
+        }
+
+        return savedMovie;
     }
 
     public List<Movie> getMoviesByActor(UUID actorId) {
@@ -171,4 +214,9 @@ public class MovieService {
                 .map(this::mapToResponseDTO)
                 .collect(Collectors.toList());
     }
+
+    public Movie save(Movie movie) {
+        return movieRepository.save(movie);
+    }
+
 }

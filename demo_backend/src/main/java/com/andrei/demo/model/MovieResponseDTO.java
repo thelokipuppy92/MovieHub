@@ -17,4 +17,8 @@ public class MovieResponseDTO {
     private String genre;
     private String directorName;
     private String directorId;
+    private String imageUrl;
+    private String description;
+    private Boolean released=false;
+
 }

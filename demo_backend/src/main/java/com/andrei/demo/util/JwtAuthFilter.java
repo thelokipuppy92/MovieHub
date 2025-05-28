@@ -76,12 +76,12 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws ServletException, IOException {
 
         String path = request.getRequestURI();  // Get the full URI
-        String method = request.getMethod();  // Get the HTTP method
+        String method = request.getMethod();    // Get the HTTP method
 
         log.info("Request Path: {}, Method: {}", path, method);
 
-        // Allow OPTIONS requests (for CORS preflight) and specific public endpoints
-        if ("/login".equals(path) || "/register".equals(path) || "/forgot-password".equals(path) ||
+        // Skip JWT validation for public endpoints and OPTIONS preflight requests
+        if (path.equals("/login") || path.equals("/register") || path.equals("/forgot-password") ||
                 path.startsWith("/forgotPassword/verifyMail") ||
                 path.startsWith("/forgotPassword/verifyOtp") ||
                 path.startsWith("/forgotPassword/changePassword") ||
@@ -91,7 +91,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             return;
         }
 
+        // Now check the Authorization header only if not skipping
         String authHeader = request.getHeader("Authorization");
+        log.info("Authorization header: {}", authHeader);
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             log.error("Authorization header is missing or does not start with 'Bearer '");
@@ -113,8 +115,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             if ("user".equalsIgnoreCase(role)) {
                 boolean isAllowedPath = false;
 
-                // Allow specific GET methods for 'user' role
-                if (method.equalsIgnoreCase("GET")) {
+                if ("GET".equalsIgnoreCase(method)) {
                     isAllowedPath = path.equals("/movie") ||
                             path.equals("/movie/available-genres") ||
                             path.equals("/movie/fil") ||
@@ -124,17 +125,19 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                             path.equals("/directors") ||
                             path.startsWith("/directors/email/") ||
                             path.startsWith("/directors/name/") ||
-                            path.matches("/review/[a-fA-F0-9\\-]+");
+                            path.matches("/review/[a-fA-F0-9\\-]+") ||
+                            path.equals("/account-details") ||
+                            path.matches("/person/[a-fA-F0-9\\-]+") ||
+                            path.startsWith("/api/watchlist");
                 }
-
 
                 if ("POST".equalsIgnoreCase(method)) {
-                    isAllowedPath = path.startsWith("/review");
+                    isAllowedPath = path.startsWith("/review") || path.startsWith("/api/watchlist");
                 }
 
-
                 if ("PUT".equalsIgnoreCase(method) || "DELETE".equalsIgnoreCase(method)) {
-                    isAllowedPath = path.matches("/review/[a-fA-F0-9\\-]+");
+                    isAllowedPath = path.matches("/review/[a-fA-F0-9\\-]+") ||
+                            path.matches("/person/[a-fA-F0-9\\-]+");
                 }
 
                 if (!isAllowedPath) {
@@ -144,7 +147,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 }
             }
 
-
+            // If everything is OK, continue the filter chain
             filterChain.doFilter(request, response);
 
         } catch (JwtException e) {

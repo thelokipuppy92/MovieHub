@@ -1,6 +1,7 @@
 package com.andrei.demo.controller;
 
 import com.andrei.demo.model.*;
+import com.andrei.demo.repository.WatchlistRepository;
 import com.andrei.demo.service.DirectorService;
 import com.andrei.demo.service.MovieService;
 import jakarta.validation.Valid;
@@ -20,6 +21,7 @@ public class MovieController {
 
     private final MovieService movieService;
     private final DirectorService directorService;
+    private final WatchlistRepository watchlistRepo;
 
     @GetMapping("/movie/available-genres")
     public ResponseEntity<List<String>> getAvailableGenres() {
@@ -97,4 +99,8 @@ public class MovieController {
     public void deleteMovie(@PathVariable UUID movieId) {
         movieService.deleteMovie(movieId);
     }
+
+
 }
+
+

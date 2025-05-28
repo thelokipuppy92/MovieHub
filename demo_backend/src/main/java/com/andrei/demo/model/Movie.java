@@ -29,6 +29,14 @@ public class Movie {
     @JoinColumn(name = "director_id", nullable = false)
     private Director director;
 
+    @Column(name = "image_url")
+    private String imageUrl;
+
+    @Column(length = 1000) // Adjust length as needed
+    private String description;
+
+    @Column
+    private Boolean released=false;
 
     @Override
     public String toString() {

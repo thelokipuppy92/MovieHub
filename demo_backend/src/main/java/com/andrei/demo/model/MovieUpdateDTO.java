@@ -21,4 +21,7 @@ public class MovieUpdateDTO {
     @NotNull(message = "Director is required")
     private String directorId;
 
+    private String description;
+    private Boolean released = false;
+
 }

@@ -93,26 +93,15 @@ const ForgotPassword: React.FC = () => {
     };
 
     return (
-        <div style={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            minHeight: '100vh',
-            width: '100vw',
-        }}>
-        <div style={{
-            maxWidth: '400px',
-            margin: '50px auto',
-            padding: '20px',
-            border: '1px solid #ccc',
-            borderRadius: '8px'
-        }}>
-            <h2>Forgot Password</h2>
+        <div className="forgot-page-wrapper">
+            <div className="forgot-background"></div>
 
-            {message && <p style={{ color: 'blue' }}>{message}</p>}
+            <div className="forgot-container">
+                <h2>Forgot Password</h2>
 
-            {/* Email Input */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {message && <p style={{ color: 'blue' }}>{message}</p>}
+
+                {/* Email */}
                 <input
                     type="email"
                     placeholder="Enter your email"
@@ -123,15 +112,8 @@ const ForgotPassword: React.FC = () => {
                 <button onClick={handleSendOtp} disabled={loading}>
                     {loading ? 'Sending OTP...' : 'Send OTP'}
                 </button>
-            </div>
 
-            {/* OTP Input */}
-            <div style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '10px',
-                marginTop: '20px'
-            }}>
+                {/* OTP */}
                 <input
                     type="text"
                     placeholder="Enter OTP"
@@ -139,19 +121,13 @@ const ForgotPassword: React.FC = () => {
                     onChange={(e) => setOtp(e.target.value)}
                     required
                     disabled={!isOtpSent}
+                    style={{ marginTop: '15px' }}
                 />
                 <button onClick={handleVerifyOtp} disabled={!isOtpSent || loading}>
                     {loading ? 'Verifying OTP...' : 'Verify OTP'}
                 </button>
-            </div>
 
-            {/* New Password */}
-            <div style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '10px',
-                marginTop: '20px'
-            }}>
+                {/* Passwords */}
                 <input
                     type="password"
                     placeholder="Enter new password"
@@ -159,6 +135,7 @@ const ForgotPassword: React.FC = () => {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     disabled={!isOtpVerified}
+                    style={{ marginTop: '15px' }}
                 />
                 <input
                     type="password"
@@ -173,8 +150,8 @@ const ForgotPassword: React.FC = () => {
                 </button>
             </div>
         </div>
-        </div>
     );
+
 };
 
 export default ForgotPassword;

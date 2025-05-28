@@ -5,6 +5,11 @@ interface Movie {
     releaseYear: number;
     genre: string;
     directorId: string;
+    imageUrl?: string;
+    imageFile?: File;
+    description?: string;
+    released?: boolean;
+
 }
 
 export default Movie;

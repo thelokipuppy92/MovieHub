@@ -50,6 +50,8 @@ const useMovieActions = ({ setDataMovies, setSelectedMovie, selectedMovie }: Use
                 releaseYear: movie.releaseYear,
                 genre: movie.genre,
                 directorId: movie.directorId,
+                description: movie.description, // add this line
+                released: movie.released,
             };
 
             await MovieService.updateMovie(selectedMovie.id, payload);

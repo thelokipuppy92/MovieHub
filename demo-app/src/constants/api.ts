@@ -5,3 +5,5 @@ export const DIRECTOR_ENDPOINT = `${API_BASE_URL}/directors`;
 export const ACTOR_ENDPOINT = `${API_BASE_URL}/actors`;
 
 export const REVIEW_ENDPOINT = `${API_BASE_URL}/review`;
+
+export const WATCHLIST_ENDPOINT  = `${API_BASE_URL}/api/watchlist`;

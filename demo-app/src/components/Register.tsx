@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import '../App.css';
 import axios from 'axios';
 import { ToastContainer, toast } from 'react-toastify';
-
+import 'react-toastify/dist/ReactToastify.css';
 
 const Register: React.FC = () => {
     const [name, setName] = useState('');
@@ -23,18 +23,19 @@ const Register: React.FC = () => {
             return;
         }
 
-        if(age < 18 ){
+        const parsedAge = parseInt(age);
+        if (isNaN(parsedAge) || parsedAge <= 0) {
+            notifyError('Age must be a valid positive number.');
+            return;
+        }
+
+        if (parsedAge < 18) {
             notifyError('You must be major!');
             return;
         }
 
         if (password !== confirmPassword) {
             notifyError('Passwords do not match!');
-            return;
-        }
-
-        if (parseInt(age) <= 0) {
-            notifyError('Age must be a valid positive number.');
             return;
         }
 
@@ -53,79 +54,66 @@ const Register: React.FC = () => {
             const response = await axios.post('http://localhost:8080/register', {
                 name,
                 email,
-                age: parseInt(age),
+                age: parsedAge,
                 password
             });
 
             if (response.status === 201) {
+                toast.success("Registration successful! Go back to login...");
                 setTimeout(() => navigate('/login'), 2000);
             }
-            toast.success("Registration successful! Go back to login...")
         } catch (error) {
             notifyError('Failed to register. Email may already be in use.');
         }
     };
 
     return (
-        <div className="app-container">
-            <h1>Register</h1>
-            <form onSubmit={handleRegister}>
-                <label>Name:</label>
-                <input
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    //required
-                />
+        <div className="register-page-wrapper">
+            <ToastContainer />
+            <div className="register-background"></div>
 
-                <label>Email:</label>
-                <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    //required
-                />
+            <div className="register-container">
+                <h1>Register</h1>
+                <form onSubmit={handleRegister}>
+                    <label>Name:</label>
+                    <input
+                        type="text"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                    />
 
-                <label>Age:</label>
-                <input
-                    type="number"
-                    value={age}
-                    onChange={(e) => setAge(e.target.value)}
-                    //required
-                />
+                    <label>Email:</label>
+                    <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                    />
 
-                <label>Password:</label>
-                <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    //required
-                />
+                    <label>Age:</label>
+                    <input
+                        type="number"
+                        value={age}
+                        onChange={(e) => setAge(e.target.value)}
+                    />
 
-                <label>Confirm Password:</label>
-                <input
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    //required
-                />
+                    <label>Password:</label>
+                    <input
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                    />
 
-                <button type="submit">Register</button>
-                <button type="button" onClick={() => navigate('/login')}>Back to Login</button>
-            </form>
+                    <label>Confirm Password:</label>
+                    <input
+                        type="password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                    />
 
-            {/* ToastContainer usage */}
-            <ToastContainer
-                position="top-right"
-                autoClose={3000}
-                hideProgressBar={false}
-                newestOnTop={false}
-                closeButton={true}
-                rtl={false}
-                pauseOnFocusLoss
-                draggable
-                pauseOnHover
-            />
+                    <button type="submit">Register</button>
+                    <button type="button" onClick={() => navigate('/login')}>Back to Login</button>
+                </form>
+            </div>
         </div>
     );
 };

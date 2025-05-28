@@ -217,7 +217,6 @@ function AdminDashboard() {
     };
 
 
-    // Filter movies based on the selected director
     const filteredMovies = selectedDirector
         ? movies.filter(movie => movie.directorId === selectedDirector.id)
         : movies;
@@ -228,152 +227,212 @@ function AdminDashboard() {
     };
 
     const handleLogout = () => {
-        //localStorage.removeItem("admin_token");
         sessionStorage.removeItem("token");
         navigate('/login');
     };
 
     return (
-        <div className="app-container">
-            <h1>Person List</h1>
-            <ThemeSwitcher onThemeChange={handleThemeChange} />
-            <div className="button-group">
-                <button onClick={() => openModal()}>Add</button>
-                <button onClick={() => openModal(true)} disabled={!selectedPerson}>Update</button>
-                <button onClick={handleDeletePerson} disabled={!selectedPerson}>Delete</button>
-            </div>
-            <br />
-            <PersonTable
-                data={data}
-                loading={loading}
-                isError={isError}
-                onRowSelected={handleRowSelected}
-                theme={currentTheme}
-            />
-            <PersonModal
-                isOpen={isModalOpen}
-                isUpdateMode={isUpdateMode}
-                initialPerson={newPerson}
-                onClose={closeModal}
-                onAdd={handleAddPerson}
-                onUpdate={handleUpdatePerson}
+        <div
+            className="app-container"
+            style={{
+                position: "relative",
+                minHeight: "100vh",
+                color: currentTheme === "dark" ? "#fff" : "#000",
+            }}
+        >
+            {/* Background div with blur */}
+            <div
+                className="background-blur"
+                style={{
+                    backgroundImage: "url('/images/background2.jpg')",
+                    backgroundSize: "cover",
+                    backgroundRepeat: "no-repeat",
+                    backgroundPosition: "center top 30%",
+                    filter: "blur(8px) brightness(0.6)",
+                    position: "fixed",
+                    top: 0,
+                    left: 0,
+                    width: "100vw",
+                    height: "100vh",
+                    zIndex: -1,
+                }}
             />
 
-            {/* --- Movie Section --- */}
-            <div className="section">
-                <h2>Movie List</h2>
+            {/* Content container */}
+            <div
+                className="content-container"
+                style={{
+                    position: "relative",
+                    zIndex: 1,
+                    padding: "20px",
+                }}
+            >
+                <h1>Person List</h1>
+                <ThemeSwitcher onThemeChange={handleThemeChange} />
+
                 <div className="button-group">
-                    <button onClick={() => openMovieModal()}>Add Movie</button>
-                    <button onClick={() => openMovieModal(true)} disabled={!selectedMovie}>Update Movie</button>
-                    <button onClick={handleDeleteMovie} disabled={!selectedMovie}>Delete Movie</button>
+                    <button onClick={() => openModal()}>Add</button>
+                    <button onClick={() => openModal(true)} disabled={!selectedPerson}>
+                        Update
+                    </button>
+                    <button onClick={handleDeletePerson} disabled={!selectedPerson}>
+                        Delete
+                    </button>
                 </div>
-                <MovieTable
-                    data={movies}
-                    loading={loadingMovies}
-                    isError={isErrorMovies}
-                    onRowSelected={handleMovieRowSelected}
+
+                <br />
+
+                <PersonTable
+                    data={data}
+                    loading={loading}
+                    isError={isError}
+                    onRowSelected={handleRowSelected}
                     theme={currentTheme}
                 />
-                <MovieModal
-                    isOpen={isMovieModalOpen}
-                    isUpdateMode={isMovieUpdateMode}
-                    initialMovie={newMovie}
-                    onClose={closeMovieModal}
-                    onAdd={handleAddMovie}
-                    onUpdate={handleUpdateMovie}
+                <PersonModal
+                    isOpen={isModalOpen}
+                    isUpdateMode={isUpdateMode}
+                    initialPerson={newPerson}
+                    onClose={closeModal}
+                    onAdd={handleAddPerson}
+                    onUpdate={handleUpdatePerson}
                 />
 
-                {/* --- Actor Section --- */}
+                {/* --- Movie Section --- */}
                 <div className="section">
-                    <h2>Actor List</h2>
+                    <h2>Movie List</h2>
                     <div className="button-group">
-                        <button onClick={() => openActorModal()}>Add Actor</button>
-                        <button onClick={() => openActorModal(true)} disabled={!selectedActor}>Update Actor</button>
-                        <button onClick={handleDeleteActor} disabled={!selectedActor}>Delete Actor</button>
+                        <button onClick={() => openMovieModal()}>Add Movie</button>
+                        <button onClick={() => openMovieModal(true)} disabled={!selectedMovie}>
+                            Update Movie
+                        </button>
+                        <button onClick={handleDeleteMovie} disabled={!selectedMovie}>
+                            Delete Movie
+                        </button>
                     </div>
-                    <ActorTable
-                        data={actors}
-                        loading={loadingActors}
-                        isError={isErrorActors}
-                        onRowSelected={handleActorRowSelected}
+
+                    <MovieTable
+                        data={movies}
+                        loading={loadingMovies}
+                        isError={isErrorMovies}
+                        onRowSelected={handleMovieRowSelected}
                         theme={currentTheme}
                     />
-                    <ActorModal
-                        isOpen={isActorModalOpen}
-                        isUpdateMode={isActorUpdateMode}
-                        initialActor={newActor}
-                        onClose={closeActorModal}
-                        onAdd={handleAddActor}
-                        onUpdate={handleUpdateActor}
-                    />
-                </div>
-
-                {/* Director Section */}
-                <div className="section">
-                    <h2>Director List</h2>
-                    <div className="button-group">
-                        <button onClick={() => openDirectorModal()}>Add Director</button>
-                        <button onClick={() => openDirectorModal(true)} disabled={!selectedDirector}>Update Director</button>
-                        <button onClick={handleDeleteDirector} disabled={!selectedDirector}>Delete Director</button>
-                    </div>
-                    <DirectorTable
-                        data={directors}
-                        loading={loadingDirectors}
-                        isError={isErrorDirectors}
-                        onRowSelected={handleDirectorRowSelected}
-                        theme={currentTheme}
-                    />
-                    <DirectorModal
-                        isOpen={isDirectorModalOpen}
-                        isUpdateMode={isDirectorUpdateMode}
-                        initialDirector={newDirector}
-                        onClose={closeDirectorModal}
-                        onAdd={handleAddDirector}
-                        onUpdate={handleUpdateDirector}
+                    <MovieModal
+                        isOpen={isMovieModalOpen}
+                        isUpdateMode={isMovieUpdateMode}
+                        initialMovie={newMovie}
+                        onClose={closeMovieModal}
+                        onAdd={handleAddMovie}
+                        onUpdate={handleUpdateMovie}
                     />
 
-                    {/* --- Movie List for Selected Director --- */}
-                    {selectedDirector && (
-                        <div>
-                            <button onClick={toggleDirectorMovies}>
-                                {showDirectorMovies ? "Hide Movies" : "Show Movies Directed by " + selectedDirector.name}
+                    {/* --- Actor Section --- */}
+                    <div className="section">
+                        <h2>Actor List</h2>
+                        <div className="button-group">
+                            <button onClick={() => openActorModal()}>Add Actor</button>
+                            <button onClick={() => openActorModal(true)} disabled={!selectedActor}>
+                                Update Actor
                             </button>
-                            {showDirectorMovies && (
-                                <div>
-                                    <h3>Movies Directed by {selectedDirector.name}</h3>
-                                    {filteredMovies.length > 0 ? (
-                                        <MovieTable
-                                            data={filteredMovies}
-                                            loading={loadingMovies}
-                                            isError={isErrorMovies}
-                                            theme={currentTheme}
-                                        />
-                                    ) : (
-                                        <p>No movies found for this director.</p>
-                                    )}
-                                </div>
-                            )}
+                            <button onClick={handleDeleteActor} disabled={!selectedActor}>
+                                Delete Actor
+                            </button>
                         </div>
-                    )}
-                </div>
-            </div>
-            {/* ToastContainer  */}
-            <ToastContainer
-                position="top-right"
-                autoClose={3000}
-                hideProgressBar={false}
-                newestOnTop={false}
-                closeButton={true}
-                rtl={false}
-                pauseOnFocusLoss
-                draggable
-                pauseOnHover
-            />
-            {/* Logout Button */}
-            <button onClick={handleLogout}>Logout</button>
-        </div>
 
+                        <ActorTable
+                            data={actors}
+                            loading={loadingActors}
+                            isError={isErrorActors}
+                            onRowSelected={handleActorRowSelected}
+                            theme={currentTheme}
+                        />
+                        <ActorModal
+                            isOpen={isActorModalOpen}
+                            isUpdateMode={isActorUpdateMode}
+                            initialActor={newActor}
+                            onClose={closeActorModal}
+                            onAdd={handleAddActor}
+                            onUpdate={handleUpdateActor}
+                        />
+                    </div>
+
+                    {/* Director Section */}
+                    <div className="section">
+                        <h2>Director List</h2>
+                        <div className="button-group">
+                            <button onClick={() => openDirectorModal()}>Add Director</button>
+                            <button onClick={() => openDirectorModal(true)} disabled={!selectedDirector}>
+                                Update Director
+                            </button>
+                            <button onClick={handleDeleteDirector} disabled={!selectedDirector}>
+                                Delete Director
+                            </button>
+                        </div>
+
+                        <DirectorTable
+                            data={directors}
+                            loading={loadingDirectors}
+                            isError={isErrorDirectors}
+                            onRowSelected={handleDirectorRowSelected}
+                            theme={currentTheme}
+                        />
+                        <DirectorModal
+                            isOpen={isDirectorModalOpen}
+                            isUpdateMode={isDirectorUpdateMode}
+                            initialDirector={newDirector}
+                            onClose={closeDirectorModal}
+                            onAdd={handleAddDirector}
+                            onUpdate={handleUpdateDirector}
+                        />
+
+                        {/* --- Movie List for Selected Director --- */}
+                        {selectedDirector && (
+                            <div>
+                                <button onClick={toggleDirectorMovies}>
+                                    {showDirectorMovies
+                                        ? "Hide Movies"
+                                        : "Show Movies Directed by " + selectedDirector.name}
+                                </button>
+                                {showDirectorMovies && (
+                                    <div>
+                                        <h3>Movies Directed by {selectedDirector.name}</h3>
+                                        {filteredMovies.length > 0 ? (
+                                            <MovieTable
+                                                data={filteredMovies}
+                                                loading={loadingMovies}
+                                                isError={isErrorMovies}
+                                                theme={currentTheme}
+                                            />
+                                        ) : (
+                                            <p>No movies found for this director.</p>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* ToastContainer  */}
+                <ToastContainer
+                    position="top-right"
+                    autoClose={3000}
+                    hideProgressBar={false}
+                    newestOnTop={false}
+                    closeButton={true}
+                    rtl={false}
+                    pauseOnFocusLoss
+                    draggable
+                    pauseOnHover
+                />
+
+                {/* Logout Button */}
+                <button onClick={handleLogout}>Logout</button>
+            </div>
+        </div>
     );
+
 }
 
 export default AdminDashboard;

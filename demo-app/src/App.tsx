@@ -8,6 +8,8 @@ import AdminDashboard from "./components/AdminDashboard.tsx";
 import {toast, ToastContainer} from "react-toastify";
 import ForgotPassword from './components/ForgotPassword';
 import AuthenticatedRouteGuard from "./config/authenticatedRouteGuard.tsx";
+import AccountDetails from "./components/AccountDetails.tsx";
+import LandingPage from "./components/LandingPage.tsx";
 
 const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
     const token = sessionStorage.getItem("auth_token");
@@ -29,11 +31,14 @@ function App() {
     return (
         <Router>
             <Routes>
+                <Route path="/" element={<LandingPage />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route element={<AuthenticatedRouteGuard />}>
                     <Route path="/dashboard"  element={<Dashboard />} />
+                    <Route path="/account" element={<AccountDetails />} />
+
                     <Route path="/admin-dashboard" element={<AdminDashboard />} />
 
                 </Route>

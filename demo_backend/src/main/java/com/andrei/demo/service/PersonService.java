@@ -37,7 +37,12 @@ public class PersonService {
         existingPerson.setName(person.getName());
         existingPerson.setAge(person.getAge());
         existingPerson.setEmail(person.getEmail());
-        existingPerson.setPassword(passwordUtil.hashPassword(person.getPassword()));
+        //existingPerson.setPassword(passwordUtil.hashPassword(person.getPassword()));
+        //if (!passwordUtil.checkPassword(person.getPassword(), existingPerson.getPassword())) {
+            // Only hash if the password was changed (i.e. provided as plain text)
+         //   existingPerson.setPassword(passwordUtil.hashPassword(person.getPassword()));
+       // }
+
 
         return personRepository.save(existingPerson);
     }

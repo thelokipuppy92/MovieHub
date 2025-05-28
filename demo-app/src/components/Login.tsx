@@ -105,35 +105,68 @@ const Login: React.FC = () => {
 
 
      */
-        return (
-        <div className="app-container">
-            <ThemeSwitcher onThemeChange={setCurrentTheme} />
-            <h1>Login</h1>
-            <form onSubmit={handleLogin}>
-                <label>Email:</label>
-                <input
-                    type="text"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                />
+    return (
+        <div className="login-page-wrapper">
+            <div className="login-background"></div>
 
-                <label>Password:</label>
-                <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                />
+            <div className="login-container">
+                <ThemeSwitcher onThemeChange={setCurrentTheme} />
+                <h1>Login</h1>
+                <form onSubmit={handleLogin}>
+                    <label>Email:</label>
+                    <input
+                        type="text"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                    />
 
-                {errorMessage && <p className="error-message">{errorMessage}</p>}
+                    <label>Password:</label>
+                    <input
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                    />
 
-                <button type="submit">Login</button>
-                <button type="button" onClick={() => navigate('/register')}>Register</button>
-                <button type="button" onClick={() => navigate('/forgot-password')}>Forgot Password?</button>
-            </form>
+                    {errorMessage && <p className="error-message">{errorMessage}</p>}
+
+                    <button type="submit">Login</button>
+                    <button type="button" onClick={() => navigate('/register')}>Register</button>
+                    <button type="button" onClick={() => navigate('/forgot-password')}>Forgot Password?</button>
+                </form>
+            </div>
         </div>
     );
+
+
+};
+
+const styles = {
+    container: {
+        backgroundImage: 'url("/images/background.jpg")',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        height: '100vh',
+        width: '100vw',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    blurOverlay: {
+        backdropFilter: 'blur(6px)',
+        backgroundColor: 'rgba(0, 0, 0, 0.6)',
+        padding: '40px',
+        borderRadius: '12px',
+        color: 'white',
+        width: '90%',
+        maxWidth: '400px',
+    },
+    formBox: {
+        display: 'flex',
+        flexDirection: 'column' as const,
+        gap: '10px',
+    },
 };
 
 export default Login;

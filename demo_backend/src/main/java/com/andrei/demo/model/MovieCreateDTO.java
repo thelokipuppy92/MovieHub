@@ -21,6 +21,14 @@ public class MovieCreateDTO {
     @NotNull(message = "Director is required")
     private String directorId;
 
+    private String imageUrl;
+
+    private String description;
+
+    private Boolean released=false;
+
+
+
 
 
 

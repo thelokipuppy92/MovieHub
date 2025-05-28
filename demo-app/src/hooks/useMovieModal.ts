@@ -14,6 +14,9 @@ const useMovieModal = ({ selectedMovie }: UseMovieModalProps) => {
         releaseYear: 0,
         genre: '',
         directorId: '',
+        description: "",
+        imageUrl: "",
+        released: false,
     });
 
     const openModal = (update = false) => {
@@ -27,6 +30,9 @@ const useMovieModal = ({ selectedMovie }: UseMovieModalProps) => {
                 releaseYear: selectedMovie.releaseYear,
                 genre: selectedMovie.genre,
                 directorId: selectedMovie.directorId,
+                description: selectedMovie.description || "",  // add this line
+                imageUrl: selectedMovie.imageUrl || "",
+                released: selectedMovie.released ?? false,
             });
         } else {
             setNewMovie({
@@ -35,6 +41,9 @@ const useMovieModal = ({ selectedMovie }: UseMovieModalProps) => {
                 releaseYear: 0,
                 genre: '',
                 directorId: '',
+                description: "",    // initialize empty string
+                imageUrl: "",
+                released: false,
             });
         }
     };
@@ -48,6 +57,10 @@ const useMovieModal = ({ selectedMovie }: UseMovieModalProps) => {
             releaseYear: 0,
             genre: '',
             directorId: '',
+            description: "",    // add here
+            imageUrl: "",
+            released: false,
+
         });
     };
 

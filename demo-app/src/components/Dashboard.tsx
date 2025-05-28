@@ -21,6 +21,8 @@ import Review from "../model/review.model.tsx";
 import {toast, ToastContainer} from "react-toastify";
 import {PersonService} from "../service/PersonService.ts";
 import  '../config/axiosConfig.ts';
+import { WatchlistService } from '../service/WatchlistService.ts';
+
 
 
 const Dashboard = () => {
@@ -85,7 +87,7 @@ const Dashboard = () => {
         newMovie,
         openModal: openMovieModal,
         closeModal: closeMovieModal
-    } = useMovieModal({ selectedMovie });
+    } = useMovieModal({selectedMovie});
 
     const handleGenreChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
         setSelectedGenre(event.target.value);
@@ -108,12 +110,35 @@ const Dashboard = () => {
         setSelectedMovie(state.selectedRows[0] || null);
     };
 
+    const handleAddToWatchlist = async () => {
+        if (!selectedMovie) {
+            toast.error('Please select a movie first.');
+            return;
+        }
+
+        const personId = sessionStorage.getItem('personId');
+        if (!personId) {
+            alert('Please log in to add movies to your watchlist.');
+            return;
+        }
+
+        try {
+            await WatchlistService.addToWatchlist(personId, selectedMovie.id);
+            toast.success(`"${selectedMovie.title}" added to your watchlist!`);
+        } catch (error) {
+            console.error('Error adding movie to watchlist:', error);
+            toast.error('Failed to add movie to watchlist.');
+        }
+    };
+
     // --- Review Handling ---
     const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
     const [userReview, setUserReview] = useState<string>('');
     const [userRating, setUserRating] = useState<number>(0);
     const [hasReviewed, setHasReviewed] = useState(false);
     const [existingReview, setExistingReview] = useState<Review | null>(null);
+    const [averageRating, setAverageRating] = useState<number | null>(null);
+
 
     useEffect(() => {
         if (selectedMovie) {
@@ -225,21 +250,30 @@ const Dashboard = () => {
     const handleSeeReviewsClick = async () => {
         if (selectedMovie) {
             try {
-
                 const reviews = await ReviewService.getReviewsByMovieId(selectedMovie.id);
                 const reviewsWithPersonId = reviews.map((review) => ({
                     ...review,
                     personId: review.personId,
                 }));
+
                 setReviews(reviewsWithPersonId);
                 setIsViewingReviews(true);
+
+                // Calculate average
+                if (reviewsWithPersonId.length > 0) {
+                    const total = reviewsWithPersonId.reduce((sum, review) => sum + review.rating, 0);
+                    const avg = total / reviewsWithPersonId.length;
+                    setAverageRating(avg);
+                } else {
+                    setAverageRating(null);
+                }
+
             } catch (error) {
                 console.error('Error fetching reviews:', error);
                 toast.error('Error fetching reviews.');
             }
         }
     };
-
 
 
     const handleDeleteReview = async () => {
@@ -283,7 +317,7 @@ const Dashboard = () => {
         fetchActors();
     }, []);
 
-    const { handleAddActor, handleUpdateActor, handleDeleteActor } =
+    const {handleAddActor, handleUpdateActor, handleDeleteActor} =
         useActorActions({
             setDataActors: setActors,
             setSelectedActor,
@@ -296,7 +330,7 @@ const Dashboard = () => {
         newActor,
         openModal: openActorModal,
         closeModal: closeActorModal,
-    } = useActorModal({ selectedActor });
+    } = useActorModal({selectedActor});
 
     const handleActorRowSelected = (state: { selectedRows: Actor[] }) => {
         setSelectedActor(state.selectedRows[0] || null);
@@ -312,7 +346,7 @@ const Dashboard = () => {
         fetchDirectors();
     }, []);
 
-    const { handleAddDirector, handleUpdateDirector, handleDeleteDirector } =
+    const {handleAddDirector, handleUpdateDirector, handleDeleteDirector} =
         useDirectorActions({
             setDataDirectors: setDirectors,
             setSelectedDirector,
@@ -325,7 +359,7 @@ const Dashboard = () => {
         newDirector,
         openModal: openDirectorModal,
         closeModal: closeDirectorModal,
-    } = useDirectorModal({ selectedDirector });
+    } = useDirectorModal({selectedDirector});
 
     const fetchDirectors = async () => {
         setLoadingDirectors(true);
@@ -356,201 +390,258 @@ const Dashboard = () => {
 
 
     return (
-        <div className="app-container">
-            <ThemeSwitcher onThemeChange={handleThemeChange} />
-            <h1>User Dashboard</h1>
-
-            {/* Genre Filter */}
-            <div>
-                <label>Genre: </label>
-                <select value={selectedGenre} onChange={handleGenreChange}>
-                    <option value="">All Genres</option>
-                    {availableGenres.map((genre) => (
-                        <option key={genre} value={genre}>
-                            {genre}
-                        </option>
-                    ))}
-                </select>
-            </div>
-
-            {/* Search by Title */}
-            <div>
-                <label>Search by Title: </label>
-                <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={handleSearchChange}
-                    placeholder="Search by title"
-                />
-            </div>
-
-            {/* Sort By */}
-            <div>
-                <label>Sort by: </label>
-                <select value={`${sortBy},${sortOrder}`} onChange={handleSortChange}>
-                    <option value="">Select sorting option</option>
-                    <option value="title,asc">Title (A-Z)</option>
-                    <option value="title,desc">Title (Z-A)</option>
-                    <option value="releaseYear,asc">Release Year (Ascending)</option>
-                    <option value="releaseYear,desc">Release Year (Descending)</option>
-                </select>
-            </div>
-
-            {/* Movie Table */}
-            <MovieTable
-                data={movies}
-                loading={loadingMovies}
-                isError={isErrorMovies}
-                onRowSelected={handleMovieRowSelected}
-                theme={currentTheme}
+        <div
+            className="app-container"
+            style={{
+                position: "relative",
+                minHeight: "100vh",
+                color: currentTheme === "dark" ? "#fff" : "#000",
+            }}
+        >
+            {/* Background div with blur */}
+            <div
+                className="background-blur"
+                style={{
+                    backgroundImage: "url('/images/background2.jpg')",
+                    backgroundSize: "cover",
+                    backgroundRepeat: "no-repeat",
+                    backgroundPosition: "center top 30%",
+                    filter: "blur(8px) brightness(0.6)",
+                    position: "fixed",
+                    top: 0,
+                    left: 0,
+                    width: "100vw",
+                    height: "100vh",
+                    zIndex: -1,
+                }}
             />
 
-            {/* Movie Actions */}
-            {selectedMovie && (
-                <div className="actions-container">
-                    {!hasReviewed && (
-                        <button onClick={handleReviewButtonClick} className="write-review-btn">
-                            Write a Review
+            {/* Content container */}
+            <div
+                className="content-container"
+                style={{
+                    position: "relative",
+                    zIndex: 1,
+                    padding: "20px",
+                }}
+            >
+                <ThemeSwitcher onThemeChange={handleThemeChange} />
+                <h1>User Dashboard</h1>
+
+                {/* Genre Filter */}
+                <div>
+                    <label>Genre: </label>
+                    <select value={selectedGenre} onChange={handleGenreChange}>
+                        <option value="">All Genres</option>
+                        {availableGenres.map((genre) => (
+                            <option key={genre} value={genre}>
+                                {genre}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+
+                {/* Search by Title */}
+                <div>
+                    <label>Search by Title: </label>
+                    <input
+                        type="text"
+                        value={searchQuery}
+                        onChange={handleSearchChange}
+                        placeholder="Search by title"
+                    />
+                </div>
+
+                {/* Sort By */}
+                <div>
+                    <label>Sort by: </label>
+                    <select value={`${sortBy},${sortOrder}`} onChange={handleSortChange}>
+                        <option value="">Select sorting option</option>
+                        <option value="title,asc">Title (A-Z)</option>
+                        <option value="title,desc">Title (Z-A)</option>
+                        <option value="releaseYear,asc">Release Year (Ascending)</option>
+                        <option value="releaseYear,desc">Release Year (Descending)</option>
+                    </select>
+                </div>
+
+                {/* Movie Table wrapped */}
+                <div className="movie-table-wrapper">
+                    <MovieTable
+                        data={movies}
+                        loading={loadingMovies}
+                        isError={isErrorMovies}
+                        onRowSelected={handleMovieRowSelected}
+                        theme={currentTheme}
+                    />
+                </div>
+
+                {/* Movie Actions */}
+                {selectedMovie && (
+                    <div className="actions-container">
+                        {!hasReviewed && (
+                            <button onClick={handleReviewButtonClick} className="write-review-btn">
+                                Write a Review
+                            </button>
+                        )}
+                        <button onClick={handleSeeReviewsClick} className="see-reviews-btn">
+                            See All Reviews
                         </button>
-                    )}
-                    <button onClick={handleSeeReviewsClick} className="see-reviews-btn">
-                        See All Reviews
+                        <button onClick={handleAddToWatchlist} disabled={!selectedMovie}>
+                            Add to Watchlist
+                        </button>
+
+                    </div>
+                )}
+
+                {/* Review Modal */}
+                {isReviewModalOpen && selectedMovie && (
+                    <div className="modal">
+                        <div className="modal-content">
+                            <h2>
+                                {hasReviewed
+                                    ? `Edit Your Review for ${selectedMovie.title}`
+                                    : `Submit Review for ${selectedMovie.title}`}
+                            </h2>
+
+                            {hasReviewed ? (
+                                <>
+                <textarea
+                    value={userReview}
+                    onChange={(e) => setUserReview(e.target.value)}
+                    placeholder="Edit your review here..."
+                />
+                                    <div>
+                                        <label>Rating: </label>
+                                        <input
+                                            type="number"
+                                            value={userRating}
+                                            onChange={(e) => setUserRating(Number(e.target.value))}
+                                            min="1"
+                                            max="10"
+                                            placeholder="Rating (1-10)"
+                                        />
+                                    </div>
+                                    <button onClick={handleSubmitReview}>Update Review</button>
+                                    <button onClick={handleDeleteReview} className="delete-review-btn">
+                                        Delete Review
+                                    </button>
+                                </>
+                            ) : (
+                                <>
+                <textarea
+                    value={userReview}
+                    onChange={(e) => setUserReview(e.target.value)}
+                    placeholder="Write your review here..."
+                />
+                                    <div>
+                                        <label>Rating: </label>
+                                        <input
+                                            type="number"
+                                            value={userRating}
+                                            onChange={(e) => setUserRating(Number(e.target.value))}
+                                            min="1"
+                                            max="10"
+                                            placeholder="Rating (1-10)"
+                                        />
+                                    </div>
+                                    <button onClick={handleSubmitReview}>Submit Review</button>
+                                </>
+                            )}
+
+                            <button onClick={() => setIsReviewModalOpen(false)}>Close</button>
+                        </div>
+                    </div>
+                )}
+
+                {/* Review Display Modal */}
+                {isViewingReviews && selectedMovie && (
+                    <div className="modal">
+                        <div className="modal-content">
+                            <h2>Reviews for {selectedMovie.title}</h2>
+
+                            {reviews.length > 0 && (
+                                <div
+                                    style={{
+                                        border: "3px solid white",
+                                        padding: "10px 15px",
+                                        borderRadius: "8px",
+                                        marginBottom: "20px",
+                                    }}
+                                >
+                                    <strong>Average Rating:</strong>{" "}
+                                    {(reviews.reduce((acc, review) => acc + review.rating, 0) / reviews.length).toFixed(1)} /
+                                    10
+                                </div>
+                            )}
+
+                            {reviews.length > 0 ? (
+                                reviews.map((review) => (
+                                    <div key={review.id} className="review-item" style={{ marginBottom: "15px" }}>
+                                        <p>
+                                            <strong>Rating:</strong> {review.rating}/10
+                                        </p>
+                                        <p>
+                                            <strong>Comment:</strong> {review.comment}
+                                        </p>
+                                        {review.personId && (
+                                            <p>
+                                                <strong>Reviewed by:</strong> {review.personId}
+                                            </p>
+                                        )}
+                                        <hr />
+                                    </div>
+                                ))
+                            ) : (
+                                <p>No reviews available for this movie.</p>
+                            )}
+
+                            <button onClick={() => setIsViewingReviews(false)}>Close</button>
+                        </div>
+                    </div>
+                )}
+
+                {/* Actor Table */}
+                <ActorTable
+                    data={actors}
+                    loading={loadingActors}
+                    isError={isErrorActors}
+                    onRowSelected={handleActorRowSelected}
+                    theme={currentTheme}
+                />
+                <DirectorTable
+                    data={directors}
+                    loading={loadingDirectors}
+                    isError={isErrorDirectors}
+                    onRowSelected={handleDirectorRowSelected}
+                    theme={currentTheme}
+                />
+
+                {/* ToastContainer  */}
+                <ToastContainer
+                    position="top-right"
+                    autoClose={3000}
+                    hideProgressBar={false}
+                    newestOnTop={false}
+                    closeButton={true}
+                    rtl={false}
+                    pauseOnFocusLoss
+                    draggable
+                    pauseOnHover
+                />
+
+                {/* Account and Logout Buttons */}
+                <div style={{ marginTop: "20px" }}>
+                    <button onClick={() => navigate("/account")} style={{ marginRight: "10px" }}>
+                        My Account
                     </button>
+                    <button onClick={handleLogout}>Logout</button>
                 </div>
-            )}
-
-            {/* Review Modal */}
-            {isReviewModalOpen && selectedMovie && (
-                <div className="modal">
-                    <div className="modal-content">
-                        <h2>
-                            {hasReviewed
-                                ? `Edit Your Review for ${selectedMovie.title}`
-                                : `Submit Review for ${selectedMovie.title}`}
-                        </h2>
-
-                        {/* Editable Fields for Review */}
-                        {hasReviewed ? (
-                            // If review exists, show fields for editing and delete option
-                            <>
-                    <textarea
-                        value={userReview}
-                        onChange={(e) => setUserReview(e.target.value)}
-                        placeholder="Edit your review here..."
-                    />
-                                <div>
-                                    <label>Rating: </label>
-                                    <input
-                                        type="number"
-                                        value={userRating}
-                                        onChange={(e) => setUserRating(Number(e.target.value))}
-                                        min="1"
-                                        max="10"
-                                        placeholder="Rating (1-10)"
-                                    />
-                                </div>
-                                <button onClick={handleSubmitReview}>
-                                    Update Review
-                                </button>
-
-                                {/* Delete Review Button */}
-                                <button onClick={handleDeleteReview} className="delete-review-btn">
-                                    Delete Review
-                                </button>
-                            </>
-                        ) : (
-                            // If review does not exist, show fields for new review
-                            <>
-                    <textarea
-                        value={userReview}
-                        onChange={(e) => setUserReview(e.target.value)}
-                        placeholder="Write your review here..."
-                    />
-                                <div>
-                                    <label>Rating: </label>
-                                    <input
-                                        type="number"
-                                        value={userRating}
-                                        onChange={(e) => setUserRating(Number(e.target.value))}
-                                        min="1"
-                                        max="10"
-                                        placeholder="Rating (1-10)"
-                                    />
-                                </div>
-                                <button onClick={handleSubmitReview}>
-                                    Submit Review
-                                </button>
-                            </>
-                        )}
-
-                        <button onClick={() => setIsReviewModalOpen(false)}>Close</button>
-                    </div>
-                </div>
-            )}
-
-
-            {/* Review Display Modal */}
-            {isViewingReviews && selectedMovie && (
-                <div className="modal">
-                    <div className="modal-content">
-                        <h2>Reviews for {selectedMovie.title}</h2>
-                        {reviews.length > 0 ? (
-                            reviews.map((review) => (
-                                <div key={review.id} className="review-item">
-                                    <p><strong>Rating:</strong> {review.rating}/10</p>
-                                    <p><strong>Comment:</strong> {review.comment}</p>
-
-                                    {review.personId && (
-                                        <p><strong>Reviewed by:</strong> {review.personId}</p>
-                                    )}
-
-                                    <hr />
-                                </div>
-                            ))
-                        ) : (
-                            <p>No reviews available for this movie.</p>
-                        )}
-                        <button onClick={() => setIsViewingReviews(false)}>Close</button>
-                    </div>
-                </div>
-            )}
-
-
-
-            {/* Actor Table */}
-            <ActorTable
-                data={actors}
-                loading={loadingActors}
-                isError={isErrorActors}
-                onRowSelected={handleActorRowSelected}
-                theme={currentTheme}
-            />
-            <DirectorTable
-                data={directors}
-                loading={loadingDirectors}
-                isError={isErrorDirectors}
-                onRowSelected={handleDirectorRowSelected}
-                theme={currentTheme}
-            />
-            {/* ToastContainer  */}
-            <ToastContainer
-                position="top-right"
-                autoClose={3000}
-                hideProgressBar={false}
-                newestOnTop={false}
-                closeButton={true}
-                rtl={false}
-                pauseOnFocusLoss
-                draggable
-                pauseOnHover
-            />
-
-            {/* Logout Button */}
-            <button onClick={handleLogout}>Logout</button>
+            </div>
         </div>
     );
+
 };
 
-export default Dashboard;
+    export default Dashboard;
 
 
