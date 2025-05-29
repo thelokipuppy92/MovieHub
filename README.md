@@ -4,7 +4,7 @@
 
 <!-- Replace with actual image paths -->
 - User Dashboard  
-  ![Landing Page](path/to/user-dashboard.png)
+  ![Landing Page](landing_page.png)
 ---
 
 ## 📌 Features
@@ -16,6 +16,8 @@
 - Set release status of movies
 - View movie casts and actor appearances
 
+   ![Login Page](login.png)
+
 ### 👤 User Capabilities
 - Register and login securely
 - Browse and filter movie catalog
@@ -23,20 +25,9 @@
 - Add/remove movies from watchlist
 - Receive email notifications when a watchlisted movie is released
 - Manage profile and watchlist from account page
+  - Movie List View  
+  ![Movie List](user_dashboard.png)
 
----
-## ✨ UI Screenshots
-
-
-
-- Admin Panel  
-  ![Admin Panel](path/to/admin-panel.png)
-
-- Movie List View  
-  ![Movie List](path/to/movie-list.png)
-
-- Watchlist Page  
-  ![Watchlist](path/to/watchlist.png)
 
 ## 🧱 Tech Stack
 
