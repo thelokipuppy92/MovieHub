@@ -28,6 +28,8 @@
   - Movie List View  
   ![Movie List](user_dashboard.png)
 
+  ![Account Details](account.png)
+
 
 ## 🧱 Tech Stack
 
