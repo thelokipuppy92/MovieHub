@@ -2,6 +2,9 @@
 
 **MovieHub** is a full-stack web application that allows users to browse, review, and manage a personalized watchlist of movies. Administrators can manage actors, directors, and movie details. The system also includes a real-time notification system that emails users when a movie on their watchlist is released.
 
+<!-- Replace with actual image paths -->
+- User Dashboard  
+  ![Landing Page](path/to/user-dashboard.png)
 ---
 
 ## 📌 Features
@@ -24,9 +27,7 @@
 ---
 ## ✨ UI Screenshots
 
-<!-- Replace with actual image paths -->
-- User Dashboard  
-  ![User Dashboard](path/to/user-dashboard.png)
+
 
 - Admin Panel  
   ![Admin Panel](path/to/admin-panel.png)
